@@ -1,9 +1,9 @@
 <script>
     import { onMount } from 'svelte';
     import axios from 'axios';
-  
+    import WorkoutCard from '../componets/workoutCard.svelte';  
     /**
-   * @type {any[]} 
+   * @type {any[]}
    */
     let workouts = [];
   
@@ -11,7 +11,6 @@
     onMount(async () => {
       try {
         const response = await axios.get('http://localhost:5001/api/workouts');
-        console.log(response.data);  // Log the response data for debugging
         workouts = response.data;
       } catch (error) {
         console.error('Error fetching workouts:', error);
@@ -25,45 +24,20 @@
     <p>No workouts available.</p>
   {/if}
   
-  <ul>
+  <div class="workout-list">
     {#each workouts as workout}
-      <li>
-        <h2>{workout.name}</h2>
-        <p>{@html workout.description}</p>
+      <WorkoutCard
+        workoutName={workout.name}
+        imgSrc={workout.images && workout.images.length > 0 ? workout.images[0].image : 'https://via.placeholder.com/100?text=No+Image'}
+      />
+    {/each}
+  </div>
   
-        <!-- Muscles Involved -->
-        {#if Array.isArray(workout.muscles) && workout.muscles.length > 0}
-          <h3>Muscles Involved:</h3>
-          <ul>
-            {#each workout.muscles as muscle}
-              <li>{muscle.name_en}</li>
-            {/each}
-          </ul>
-        {:else}
-          <p>No muscles listed.</p>
-        {/if}
-  
-        <!-- Image -->
-        {#if Array.isArray(workout.images) && workout.images.length > 0}
-          <h3>Image:</h3>
-          <img src={workout.images[0].image} alt="Workout Image" width="200" />
-        {:else}
-          <p>No images available.</p>
-        {/if}
-  
-       <!-- Render Videos -->
-      {#if Array.isArray(workout.videos) && workout.videos.length > 0}
-      <h3>Videos:</h3>
-      {#each workout.videos as video}
-        <video width="320" height="240" controls>
-          <source src={video.video} type="video/mp4" />  <!-- Access the video URL here -->
-          Your browser does not support the video tag.
-        </video>
-      {/each}
-    {:else}
-      <p>No videos available.</p>
-    {/if}
-  </li>
-{/each}
-</ul>
+  <style>
+    .workout-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+  </style>
   

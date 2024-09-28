@@ -7,6 +7,7 @@
    */
     let workouts = [];
   
+    /*
     // Fetch workouts when the component is mounted
     onMount(async () => {
       try {
@@ -16,6 +17,56 @@
         console.error('Error fetching workouts:', error);
       }
     });
+    */
+    // Fetch all workouts on mount
+  async function fetchAllWorkouts() {
+    try {
+      const response = await axios.get(`http://localhost:5001/api/workouts`);
+      workouts = response.data;
+      console.log('All workouts:', workouts);  // Log all workouts returned on mount
+    } catch (error) {
+      console.error('Error fetching workouts:', error);
+    }
+  }
+
+  // Fetch workouts filtered by selected muscles
+  async function fetchWorkoutsByMuscle() {
+    try {
+      const muscleName = selectedMuscles.join(',');
+      const response = await axios.get(`http://localhost:5001/api/workouts?muscleName=${muscleName}`);
+      workouts = response.data;
+      console.log('Filtered workouts for muscles:', muscleName, workouts);  // Log filtered workouts by muscle selection
+    } catch (error) {
+      console.error('Error fetching workouts:', error);
+    }
+  }
+  // Toggle muscle selection
+  /**
+   * @param {any} muscleName
+   */
+   function toggleMuscle(muscleName) {
+  const isBack = muscleName.includes("(back)");
+
+  // Determine the linked muscle (either front or back)
+  const linkedMuscleName = isBack
+    ? muscleName.replace(" (back)", "")
+    : `${muscleName} (back)`;
+
+  // If the muscle is already selected, remove both the muscle and its linked muscle
+  if (selectedMuscles.includes(muscleName)) {
+    selectedMuscles = selectedMuscles.filter(
+      name => name !== muscleName && name !== linkedMuscleName
+    );
+  } else {
+    // If the muscle is not selected, add both the muscle and its linked muscle
+    selectedMuscles = [...selectedMuscles, muscleName, linkedMuscleName];
+  }
+
+  fetchWorkoutsByMuscle(); // Fetch filtered workouts based on selected muscles
+}
+
+  // On mount, fetch all workouts
+  onMount(fetchAllWorkouts);
 
 // Toggles filtering the workouts 
 let toggleGroups = [
@@ -237,6 +288,14 @@ function toggleFiltersSection() {
   filtersSectionOpen = !filtersSectionOpen;
 }
 
+  /**
+   * @type {any[]}
+   */
+let selectedMuscles = []; // Array to track selected muscle names
+
+
+
+
   </script>
   
   <header>
@@ -246,19 +305,20 @@ function toggleFiltersSection() {
 <main>
     <aside>
    
-<h2>Muscle Selection</h2>
-{#each muscles.filter(muscle => muscle.id !== "Calves (back)" && muscle.id !== "Trapezius (back)") as muscle (muscle.id)}
-  <div class="toggle-item">
-    <label for={muscle.id} class="filter-label">{muscle.id}</label>
-    <input
-      type="checkbox"
-      id={muscle.id}
-      class="toggle-switch"
-      disabled
-    />
-    <label for={muscle.id} class="toggle-label"></label>
-  </div>
-{/each}
+        <h2>Select Muscles</h2>
+        {#each muscles.filter(muscle => muscle.id !== "Calves (back)" && muscle.id !== "Trapezius (back)") as muscle (muscle.id)}
+          <div class="toggle-item">
+            <label for={muscle.id} class="filter-label">{muscle.id}</label>
+            <input
+              type="checkbox"
+              id={muscle.id}
+              class="toggle-switch"
+              checked={selectedMuscles.includes(muscle.id)}
+              on:change={() => toggleMuscle(muscle.id)}
+            />
+            <label for={muscle.id} class="toggle-label"></label>
+          </div>
+        {/each}
 
 <h2>
   Filters 

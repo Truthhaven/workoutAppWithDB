@@ -1,0 +1,12 @@
+body {
+    height: 100dvh;
+    width: 100dvw;
+}
+
+.appContent {
+    height:100%;
+    width:100%;
+    display: flex;
+    flex-direction: column;
+}
+

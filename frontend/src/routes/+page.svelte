@@ -7,17 +7,6 @@
    */
     let workouts = [];
   
-    /*
-    // Fetch workouts when the component is mounted
-    onMount(async () => {
-      try {
-        const response = await axios.get('http://localhost:5001/api/workouts');
-        workouts = response.data;
-      } catch (error) {
-        console.error('Error fetching workouts:', error);
-      }
-    });
-    */
     // Fetch all workouts on mount
   async function fetchAllWorkouts() {
     try {
@@ -62,9 +51,17 @@
     selectedMuscles = [...selectedMuscles, muscleName, linkedMuscleName];
   }
 
-  fetchWorkoutsByMuscle(); // Fetch filtered workouts based on selected muscles
-}
+  // Update the isSelected state of each muscle in the muscles array
+  muscles = muscles.map(muscle => {
+      if (muscle.id === muscleName || muscle.id === linkedMuscleName) {
+        return { ...muscle, isSelected: !muscle.isSelected };
+      }
+      return muscle;
+    });
 
+    console.log("Updated muscles:", muscles);  // For debugging
+    fetchWorkoutsByMuscle();  // Fetch filtered workouts based on selected muscles
+  }
   // On mount, fetch all workouts
   onMount(fetchAllWorkouts);
 
@@ -292,9 +289,6 @@ function toggleFiltersSection() {
    * @type {any[]}
    */
 let selectedMuscles = []; // Array to track selected muscle names
-
-
-
 
   </script>
   

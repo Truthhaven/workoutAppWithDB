@@ -346,7 +346,7 @@ let selectedMuscles = []; // Array to track selected muscle names
            
            {#each muscles as muscle (muscle.id)}
              {#if muscle.isFront}
-               <path d="{muscle.path}" fill="{muscle.isSelected ? 'red' : 'white'}" stroke="black"/>
+               <path d="{muscle.path}" fill="{muscle.isSelected ? 'red' : 'white'}"  on:click={() => toggleMuscle(muscle.id)} stroke="black"/>
              {/if}
            {/each}
         </svg>
@@ -356,7 +356,7 @@ let selectedMuscles = []; // Array to track selected muscle names
           
           {#each muscles as muscle (muscle.id)}
             {#if muscle.isBack}
-              <path d="{muscle.path}" fill="{muscle.isSelected ? 'red' : 'white'}" stroke="black"/>
+              <path d="{muscle.path}" fill="{muscle.isSelected ? 'red' : 'white'}" on:click={() => toggleMuscle(muscle.id)} stroke="black"/>
             {/if}
           {/each}
         </svg>

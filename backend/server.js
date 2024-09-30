@@ -111,18 +111,74 @@ const workoutSchema = new mongoose.Schema({
 // Create the workout model
 const Workout = mongoose.model('Workout', workoutSchema);
 
-// API route to get all workouts
 app.get('/api/workouts', async (req, res) => {
+  const { muscleName } = req.query; // Get muscleName from the query parameters
+
   try {
-    // Fetch all workouts from the database
-    const workouts = await Workout.find();
-    console.log('Workouts fetched successfully:', workouts);  // Log for debugging
-    res.json(workouts);  // Return the workouts as JSON
+    let workouts;
+
+    if (muscleName) {
+      const muscleNamesArray = muscleName.split(','); // Split in case multiple muscles are passed
+
+      // Fetch all workouts that match any of the selected muscles
+      workouts = await Workout.find({
+        $or: [
+          { 'muscles.name': { $in: muscleNamesArray } },
+          { 'muscles.name_en': { $in: muscleNamesArray } },
+          { 'muscles_secondary.name': { $in: muscleNamesArray } },
+          { 'muscles_secondary.name_en': { $in: muscleNamesArray } }
+        ]
+      });
+
+      // Efficient workout matching
+      const efficientWorkouts = new Map();
+
+      // Loop through each muscle in the query (selected muscles)
+      for (let muscleName of muscleNamesArray) {
+        for (let workout of workouts) {
+          // Combine primary and secondary muscles in the workout
+          let combinedMuscles = [...workout.muscles, ...workout.muscles_secondary];
+
+          // Loop through all muscles in the workout to find matches
+          for (let workoutMuscle of combinedMuscles) {
+            if (muscleName === workoutMuscle.name || muscleName === workoutMuscle.name_en) {
+              // Check if the workout is already in the Map, update matchCount if true
+              let temp = efficientWorkouts.get(workout._id);
+              if (temp) {
+                temp.matchCount++;
+              } else {
+                // Add workout to the Map with matchCount 1 if not present
+                efficientWorkouts.set(workout._id, { ...workout._doc, matchCount: 1 });
+              }
+              break; // Stop searching further once a match is found for this workout
+            }
+          }
+        }
+      }
+
+      // Extract match counts and sort them in descending order
+      const matchCounts = Array.from(efficientWorkouts.values()).map(obj => obj.matchCount);
+      let uniqueMatchCounts = [...new Set(matchCounts)];
+      const sortedMatchCounts = uniqueMatchCounts.sort((a, b) => b - a);
+
+      // Create a final sorted array of workouts based on matchCount
+      const sortedWorkouts = sortedMatchCounts.map(count => {
+        return Array.from(efficientWorkouts.values()).filter(workout => workout.matchCount === count);
+      }).flat();
+
+      // Return the sorted array of workouts
+      res.json(sortedWorkouts);
+    } else {
+      // If no muscleName is provided, return all workouts
+      workouts = await Workout.find();
+      res.json(workouts);  // Return all workouts as JSON
+    }
   } catch (err) {
-    console.error('Error fetching workouts:', err);  // Log the error for debugging
-    res.status(500).json({ error: 'Failed to fetch workouts' });  // Return error response
+    console.error('Error fetching workouts:', err);
+    res.status(500).json({ error: 'Failed to fetch workouts' });
   }
 });
+
 
 // Start the server
 const PORT = process.env.PORT || 5001;
